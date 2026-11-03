@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,7 +36,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -69,7 +69,49 @@ fun firstOffset(year: Int, month: Int): Int {
 }
 
 @Composable
+fun LanguageScreen(onChoose: (String) -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            "Choose language / Chọn ngôn ngữ",
+            fontSize = 21.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(10.dp))
+        Text(
+            "Pick once, the app will keep using it. You can change it later in the Projects tab.\nChọn một lần, app sẽ dùng luôn ngôn ngữ đó. Đổi lại sau trong tab Dự án.",
+            fontSize = 13.sp, color = Color.Gray, textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(24.dp))
+        Button(
+            onClick = { onChoose("vi") },
+            modifier = Modifier.fillMaxWidth().height(60.dp),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Tiếng Việt", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("Vietnamese", fontSize = 12.sp)
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        OutlinedButton(
+            onClick = { onChoose("en") },
+            modifier = Modifier.fillMaxWidth().height(60.dp),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("English", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("Tiếng Anh", fontSize = 12.sp)
+            }
+        }
+    }
+}
+
+@Composable
 private fun MonthNav(
+    s: AppStrings,
     year: Int,
     month: Int,
     onPrevMonth: () -> Unit,
@@ -78,31 +120,29 @@ private fun MonthNav(
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(14.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                OutlinedButton(onClick = onPrevMonth, modifier = Modifier.size(52.dp, 48.dp)) { Text("<", fontSize = 20.sp) }
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    "Tháng ${month + 1} / $year",
-                    fontSize = 21.sp, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f), textAlign = TextAlign.Center
-                )
-                Spacer(Modifier.width(8.dp))
-                OutlinedButton(onClick = onNextMonth, modifier = Modifier.size(52.dp, 48.dp)) { Text(">", fontSize = 20.sp) }
-            }
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                TextButton(onClick = onTodayMonth) { Text("Về hôm nay") }
-            }
+        Row(
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedButton(onClick = onPrevMonth, modifier = Modifier.size(40.dp, 36.dp)) { Text("<", fontSize = 16.sp) }
+            Text(
+                s.monthTitle(year, month),
+                fontSize = 16.sp, fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f), textAlign = TextAlign.Center
+            )
+            OutlinedButton(onClick = onNextMonth, modifier = Modifier.size(40.dp, 36.dp)) { Text(">", fontSize = 16.sp) }
+            TextButton(onClick = onTodayMonth) { Text(s.backToday, fontSize = 11.sp) }
         }
     }
 }
 
 @Composable
 fun CalendarScreen(
+    s: AppStrings,
     jobs: List<Job>,
     days: Map<String, DayState>,
     year: Int,
@@ -123,33 +163,24 @@ fun CalendarScreen(
     val showTodayBanner = todayState != null && !todayState.done &&
         (todayState.scheduled || todayState.jobNumbers.isNotEmpty())
 
-    Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)
-    ) {
-        // Header with depth: green gradient, rounded, shadow
-        Box(
-            modifier = Modifier.fillMaxWidth()
-                .shadow(10.dp, RoundedCornerShape(26.dp))
-                .background(
-                    Brush.linearGradient(
-                        listOf(Color(0xFF66BB6A), Color(0xFF2E7D32), Color(0xFF1B5E20))
-                    ),
-                    RoundedCornerShape(26.dp)
-                )
-                .padding(22.dp)
-        ) {
-            Column {
-                Text("Sổ Công Tháng", fontSize = 27.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                Spacer(Modifier.height(6.dp))
-                Text("Chạm vào 1 ngày để tích việc, thoáng và rõ từng ngày.", fontSize = 14.sp, color = Color.White)
-            }
-        }
-        Spacer(Modifier.height(16.dp))
+    // Fits exactly one screen: no scroll, compact centered header,
+    // small month bar, and the calendar card takes all remaining height.
+    Column(modifier = Modifier.fillMaxSize().padding(12.dp)) {
+        Text(
+            s.appName, fontSize = 21.sp, fontWeight = FontWeight.Bold,
+            color = Color(0xFF1B5E20), modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center
+        )
+        Text(
+            s.appNote, fontSize = 12.sp, color = Color.Gray,
+            modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(8.dp))
         if (showTodayBanner) {
             Card(
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                shape = RoundedCornerShape(18.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth().clickable {
                     onDayClick(
                         todayCal.get(Calendar.YEAR),
@@ -159,41 +190,40 @@ fun CalendarScreen(
                 }
             ) {
                 Text(
-                    "Hôm nay chưa bấm Đã xong. Bấm vào đây để chốt ngày.",
-                    modifier = Modifier.padding(16.dp), color = Color(0xFFE65100), fontSize = 15.sp
+                    s.todayNotDone,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    color = Color(0xFFE65100), fontSize = 12.sp, textAlign = TextAlign.Center
                 )
             }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(8.dp))
         }
-        MonthNav(year, month, onPrevMonth, onNextMonth, onTodayMonth)
-        Spacer(Modifier.height(16.dp))
+        MonthNav(s, year, month, onPrevMonth, onNextMonth, onTodayMonth)
+        Spacer(Modifier.height(8.dp))
 
-        // Calendar card: white, raised, lots of breathing room
         Card(
             colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
-            shape = RoundedCornerShape(26.dp),
-            modifier = Modifier.fillMaxWidth()
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            shape = RoundedCornerShape(20.dp),
+            modifier = Modifier.fillMaxWidth().weight(1f)
         ) {
-            Column(modifier = Modifier.padding(14.dp)) {
-                val weekdays = listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN")
+            Column(modifier = Modifier.fillMaxSize().padding(10.dp)) {
                 Row(modifier = Modifier.fillMaxWidth()) {
-                    for (w in weekdays) {
+                    for (w in s.weekdays) {
                         Text(w, modifier = Modifier.weight(1f), textAlign = TextAlign.Center,
-                            fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.Gray)
+                            fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color.Gray)
                     }
                 }
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(6.dp))
                 val total = daysInMonth(year, month)
                 val cells = mutableListOf<Int?>()
                 repeat(firstOffset(year, month)) { cells.add(null) }
                 for (d in 1..total) cells.add(d)
                 while (cells.size % 7 != 0) cells.add(null)
                 for (week in cells.chunked(7)) {
-                    Row(modifier = Modifier.fillMaxWidth()) {
+                    Row(modifier = Modifier.fillMaxWidth().weight(1f)) {
                         for (day in week) {
                             if (day == null) {
-                                Box(modifier = Modifier.weight(1f).height(92.dp))
+                                Box(modifier = Modifier.weight(1f).fillMaxHeight().padding(2.dp))
                             } else {
                                 val key = dateKey(year, month, day)
                                 val state = days[key]
@@ -204,28 +234,28 @@ fun CalendarScreen(
                                     else -> Color(0xFFF8FFF8)
                                 }
                                 Box(
-                                    modifier = Modifier.weight(1f).height(92.dp).padding(3.dp)
-                                        .shadow(4.dp, RoundedCornerShape(18.dp))
-                                        .background(bg, RoundedCornerShape(18.dp))
+                                    modifier = Modifier.weight(1f).fillMaxHeight().padding(2.dp)
+                                        .shadow(2.dp, RoundedCornerShape(12.dp))
+                                        .background(bg, RoundedCornerShape(12.dp))
                                         .border(
                                             width = if (isToday) 2.dp else 0.dp,
                                             color = if (isToday) Color(0xFF2E7D32) else Color.Transparent,
-                                            shape = RoundedCornerShape(18.dp)
+                                            shape = RoundedCornerShape(12.dp)
                                         )
                                         .clickable { onDayClick(year, month, day) }
-                                        .padding(6.dp)
+                                        .padding(4.dp)
                                 ) {
                                     Column {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Text("$day", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                            Text("$day", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                                             if (state?.done == true) {
-                                                Text(" ✓", fontSize = 13.sp, color = Color(0xFF2E7D32), fontWeight = FontWeight.Bold)
+                                                Text(" ✓", fontSize = 11.sp, color = Color(0xFF2E7D32), fontWeight = FontWeight.Bold)
                                             } else if (state?.scheduled == true) {
-                                                Text(" •Hẹn", fontSize = 10.sp, color = Color(0xFFE65100))
+                                                Text(s.scheduledMarker(), fontSize = 9.sp, color = Color(0xFFE65100))
                                             }
                                         }
                                         if (state != null && state.jobNumbers.isNotEmpty()) {
-                                            Spacer(Modifier.height(4.dp))
+                                            Spacer(Modifier.height(2.dp))
                                             val nums = state.jobNumbers.sorted()
                                             for (rowNums in nums.chunked(2)) {
                                                 Row {
@@ -233,18 +263,18 @@ fun CalendarScreen(
                                                         val job = jobByNumber[n]
                                                         val c = if (job != null) jobColor(job) else Color.Gray
                                                         Box(
-                                                            modifier = Modifier.size(24.dp).padding(1.dp)
-                                                                .shadow(2.dp, RoundedCornerShape(8.dp))
-                                                                .background(c, RoundedCornerShape(8.dp)),
+                                                            modifier = Modifier.size(18.dp).padding(1.dp)
+                                                                .shadow(1.dp, RoundedCornerShape(6.dp))
+                                                                .background(c, RoundedCornerShape(6.dp)),
                                                             contentAlignment = Alignment.Center
                                                         ) {
-                                                            Text("$n", fontSize = 12.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                                                            Text("$n", fontSize = 10.sp, color = Color.White, fontWeight = FontWeight.Bold)
                                                         }
                                                     }
                                                 }
                                             }
                                             if (nums.size > 4) {
-                                                Text("+${nums.size - 4}", fontSize = 10.sp, color = Color.Gray)
+                                                Text("+${nums.size - 4}", fontSize = 9.sp, color = Color.Gray)
                                             }
                                         }
                                     }
@@ -255,17 +285,12 @@ fun CalendarScreen(
                 }
             }
         }
-        Spacer(Modifier.height(12.dp))
-        Text(
-            "Dữ liệu lưu trên máy, không cần mạng. Nhắc lúc 20h30 nếu ngày có hẹn hoặc đã tích mà chưa bấm Đã xong và máy đã cho phép thông báo.",
-            fontSize = 12.sp, color = Color.Gray
-        )
-        Spacer(Modifier.height(16.dp))
     }
 }
 
 @Composable
 fun StatsScreen(
+    s: AppStrings,
     jobs: List<Job>,
     days: Map<String, DayState>,
     year: Int,
@@ -287,110 +312,107 @@ fun StatsScreen(
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)
     ) {
-        Text("Thống kê", fontSize = 26.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(4.dp))
-        Text("Nhìn 1 lần là biết tháng này làm được bao nhiêu.", fontSize = 14.sp, color = Color.Gray)
-        Spacer(Modifier.height(16.dp))
-        MonthNav(year, month, onPrevMonth, onNextMonth, onTodayMonth)
-        Spacer(Modifier.height(16.dp))
+        Text(s.statsTitle, fontSize = 22.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        Text(s.statsNote, fontSize = 13.sp, color = Color.Gray, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(12.dp))
+        MonthNav(s, year, month, onPrevMonth, onNextMonth, onTodayMonth)
+        Spacer(Modifier.height(12.dp))
         Row(modifier = Modifier.fillMaxWidth()) {
             Card(
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                shape = RoundedCornerShape(24.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                shape = RoundedCornerShape(20.dp),
                 modifier = Modifier.weight(1f).padding(end = 6.dp)
             ) {
-                Column(modifier = Modifier.padding(18.dp)) {
-                    Text("$tickedDays", fontSize = 34.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20))
-                    Text("ngày đã tích", fontSize = 14.sp)
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("$tickedDays", fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20))
+                    Text(s.daysTicked, fontSize = 13.sp)
                 }
             }
             Card(
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                shape = RoundedCornerShape(24.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                shape = RoundedCornerShape(20.dp),
                 modifier = Modifier.weight(1f).padding(start = 6.dp)
             ) {
-                Column(modifier = Modifier.padding(18.dp)) {
-                    Text("$totalJobDays", fontSize = 34.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0D47A1))
-                    Text("lượt việc đã tích", fontSize = 14.sp)
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("$totalJobDays", fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0D47A1))
+                    Text(s.jobTicks, fontSize = 13.sp)
                 }
             }
         }
-        Spacer(Modifier.height(16.dp))
-        Text("Từng việc trong tháng", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(14.dp))
+        Text(s.perJobInMonth, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(6.dp))
         if (jobs.isEmpty()) {
-            Text("Chưa có dự án nào. Sang tab Dự án để thêm việc theo số.")
+            Text(s.noProjectsStats)
         } else {
             for (job in jobs) {
                 val count = monthDays.count { it.value.jobNumbers.contains(job.number) }
                 val progress = if (daysInThisMonth > 0) count.toFloat() / daysInThisMonth else 0f
                 Card(
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    shape = RoundedCornerShape(18.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp)
                 ) {
-                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                         Box(
-                            modifier = Modifier.size(48.dp)
-                                .shadow(4.dp, RoundedCornerShape(14.dp))
-                                .background(jobColor(job), RoundedCornerShape(14.dp)),
+                            modifier = Modifier.size(40.dp)
+                                .shadow(3.dp, RoundedCornerShape(12.dp))
+                                .background(jobColor(job), RoundedCornerShape(12.dp)),
                             contentAlignment = Alignment.Center
-                        ) { Text("${job.number}", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold) }
-                        Spacer(Modifier.width(12.dp))
+                        ) { Text("${job.number}", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold) }
+                        Spacer(Modifier.width(10.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Số ${job.number} - ${job.name}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.height(6.dp))
-                            LinearProgressIndicator(progress = { progress }, color = jobColor(job), modifier = Modifier.fillMaxWidth().height(8.dp))
+                            Text(s.jobLabel(job.number, job.name), fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(5.dp))
+                            LinearProgressIndicator(progress = { progress }, color = jobColor(job), modifier = Modifier.fillMaxWidth().height(7.dp))
                         }
-                        Spacer(Modifier.width(12.dp))
-                        Text("$count ngày", fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.width(10.dp))
+                        Text("$count ${s.dayCountSuffix}", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
         }
-        Spacer(Modifier.height(16.dp))
-        Text("Chưa tích / chưa xong trong tháng", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(14.dp))
+        Text(s.unfinishedTitle, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(6.dp))
         if (unfinished.isEmpty()) {
-            Text("Không có ngày nào chưa xong trong tháng này.")
+            Text(s.noUnfinished)
         } else {
             for ((key, state) in unfinished) {
                 val parts = key.split("-")
                 val d = parts[2].toIntOrNull() ?: 0
                 val m = parts[1].toIntOrNull() ?: 1
                 val label = when {
-                    state.scheduled && state.jobNumbers.isEmpty() -> "Có hẹn, chưa tích"
-                    state.jobNumbers.isNotEmpty() -> "Đã tích ${state.jobNumbers.size} việc, chưa bấm Đã xong"
-                    else -> "Chưa xong"
+                    state.scheduled && state.jobNumbers.isEmpty() -> s.scheduledNotTicked
+                    state.jobNumbers.isNotEmpty() -> "${state.jobNumbers.size} ${s.tickedNotDone}"
+                    else -> s.notDone
                 }
                 Card(
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                    shape = RoundedCornerShape(18.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+                    shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("Ngày $d/$m: $label", modifier = Modifier.weight(1f))
+                    Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("${s.unfinishedDayLabel(d, m)}: $label", modifier = Modifier.weight(1f), fontSize = 14.sp)
                         Button(onClick = {
                             val y = parts[0].toIntOrNull() ?: year
                             onDayClick(y, m - 1, d)
-                        }) { Text("Mở ngày") }
+                        }) { Text(s.openDay, fontSize = 13.sp) }
                     }
                 }
             }
         }
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(12.dp))
     }
 }
 
 @Composable
 fun DayDialog(
+    s: AppStrings,
     year: Int,
     month: Int,
     day: Int,
@@ -402,20 +424,20 @@ fun DayDialog(
     onDismiss: () -> Unit
 ) {
     Dialog(onDismissRequest = onDismiss) {
-        Card(shape = RoundedCornerShape(28.dp), modifier = Modifier.fillMaxWidth().padding(8.dp)) {
-            Column(modifier = Modifier.padding(20.dp).verticalScroll(rememberScrollState())) {
-                Text("Ngày $day/${month + 1}/$year", fontSize = 21.sp, fontWeight = FontWeight.Bold)
+        Card(shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+            Column(modifier = Modifier.padding(18.dp).verticalScroll(rememberScrollState())) {
+                Text(s.dayTitle(day, month, year), fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(4.dp))
                 if (state.done) {
-                    Text("Ngày này đã xong, sẽ không nhắc nữa.", color = Color(0xFF2E7D32))
+                    Text(s.dayDoneNote, color = Color(0xFF2E7D32), fontSize = 14.sp)
                 } else if (state.scheduled) {
-                    Text("Ngày này đã hẹn trước.", color = Color(0xFFE65100))
+                    Text(s.dayScheduledNote, color = Color(0xFFE65100), fontSize = 14.sp)
                 } else {
-                    Text("Bấm vào số để tích / bỏ tích việc cho ngày này.")
+                    Text(s.dayTapHint, fontSize = 14.sp)
                 }
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(12.dp))
                 if (jobs.isEmpty()) {
-                    Text("Chưa có việc nào. Đóng bảng này rồi sang tab Dự án để thêm việc theo số.")
+                    Text(s.noJobsDay, fontSize = 14.sp)
                 } else {
                     for (rowJobs in jobs.chunked(3)) {
                         Row(modifier = Modifier.fillMaxWidth()) {
@@ -427,12 +449,12 @@ fun DayDialog(
                                         containerColor = if (selected) jobColor(job) else Color(0xFFEEEEEE),
                                         contentColor = if (selected) Color.White else Color.Black
                                     ),
-                                    modifier = Modifier.weight(1f).padding(4.dp).height(72.dp)
-                                        .shadow(if (selected) 6.dp else 2.dp, RoundedCornerShape(18.dp)),
-                                    shape = RoundedCornerShape(18.dp)
+                                    modifier = Modifier.weight(1f).padding(4.dp).height(64.dp)
+                                        .shadow(if (selected) 5.dp else 2.dp, RoundedCornerShape(16.dp)),
+                                    shape = RoundedCornerShape(16.dp)
                                 ) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text("${job.number}", fontSize = 21.sp, fontWeight = FontWeight.Bold)
+                                        Text("${job.number}", fontSize = 19.sp, fontWeight = FontWeight.Bold)
                                         Text(job.name, fontSize = 11.sp, maxLines = 1)
                                     }
                                 }
@@ -441,7 +463,7 @@ fun DayDialog(
                         }
                     }
                 }
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(12.dp))
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Button(
                         onClick = onToggleScheduled,
@@ -450,7 +472,7 @@ fun DayDialog(
                             contentColor = if (state.scheduled) Color.White else Color.Black
                         ),
                         modifier = Modifier.weight(1f).padding(end = 4.dp)
-                    ) { Text(if (state.scheduled) "Đã hẹn ✓" else "Hẹn trước") }
+                    ) { Text(if (state.scheduled) s.scheduledDone else s.scheduled, fontSize = 14.sp) }
                     Button(
                         onClick = onToggleDone,
                         colors = ButtonDefaults.buttonColors(
@@ -458,11 +480,10 @@ fun DayDialog(
                             contentColor = if (state.done) Color.White else Color.Black
                         ),
                         modifier = Modifier.weight(1f).padding(start = 4.dp)
-                    ) { Text(if (state.done) "Đã xong ✓" else "Đã xong") }
+                    ) { Text(if (state.done) s.doneDone else s.done, fontSize = 14.sp) }
                 }
-                Spacer(Modifier.height(4.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onDismiss) { Text("Đóng") }
+                    TextButton(onClick = onDismiss) { Text(s.close) }
                 }
             }
         }
@@ -471,6 +492,9 @@ fun DayDialog(
 
 @Composable
 fun ProjectsScreen(
+    s: AppStrings,
+    lang: String,
+    onLangChange: (String) -> Unit,
     jobs: List<Job>,
     onBack: () -> Unit,
     onSaveJobs: (List<Job>) -> Unit
@@ -479,44 +503,66 @@ fun ProjectsScreen(
     var adding by remember { mutableStateOf(false) }
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = onBack) { Text("< Quay lại") }
-            Text("Dự án việc theo số", fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            TextButton(onClick = onBack) { Text(s.projectsBack, fontSize = 13.sp) }
+            Text(s.projectsTitle, fontSize = 19.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
         }
-        Spacer(Modifier.height(8.dp))
-        Text("Mỗi việc gắn 1 số. Tích số nào thì số đó hiện lên ô ngày.")
-        Spacer(Modifier.height(14.dp))
-        Button(onClick = { adding = true }, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(16.dp)) { Text("+ Thêm việc mới", fontSize = 16.sp) }
-        Spacer(Modifier.height(14.dp))
+        Spacer(Modifier.height(6.dp))
+        Text(s.projectsHint, fontSize = 14.sp)
+        Spacer(Modifier.height(12.dp))
+        Text(s.languageLabel, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(6.dp))
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Button(
+                onClick = { onLangChange("vi") },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (lang == "vi") Color(0xFF2E7D32) else Color(0xFFEEEEEE),
+                    contentColor = if (lang == "vi") Color.White else Color.Black
+                ),
+                modifier = Modifier.weight(1f).padding(end = 4.dp)
+            ) { Text("Tiếng Việt", fontSize = 14.sp) }
+            Button(
+                onClick = { onLangChange("en") },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (lang == "en") Color(0xFF2E7D32) else Color(0xFFEEEEEE),
+                    contentColor = if (lang == "en") Color.White else Color.Black
+                ),
+                modifier = Modifier.weight(1f).padding(start = 4.dp)
+            ) { Text("English", fontSize = 14.sp) }
+        }
+        Spacer(Modifier.height(12.dp))
+        Button(onClick = { adding = true }, modifier = Modifier.fillMaxWidth().height(50.dp), shape = RoundedCornerShape(16.dp)) { Text(s.addNewJob, fontSize = 15.sp) }
+        Spacer(Modifier.height(12.dp))
         for (job in jobs) {
             Card(
                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                shape = RoundedCornerShape(20.dp),
-                modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                shape = RoundedCornerShape(18.dp),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp)
             ) {
-                Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(
-                        modifier = Modifier.size(48.dp)
-                            .shadow(4.dp, RoundedCornerShape(14.dp))
-                            .background(jobColor(job), RoundedCornerShape(14.dp)),
+                        modifier = Modifier.size(40.dp)
+                            .shadow(3.dp, RoundedCornerShape(12.dp))
+                            .background(jobColor(job), RoundedCornerShape(12.dp)),
                         contentAlignment = Alignment.Center
-                    ) { Text("${job.number}", color = Color.White, fontSize = 21.sp, fontWeight = FontWeight.Bold) }
-                    Spacer(Modifier.width(12.dp))
-                    Text(job.name, modifier = Modifier.weight(1f), fontSize = 16.sp)
-                    TextButton(onClick = { editing = job }) { Text("Sửa") }
+                    ) { Text("${job.number}", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold) }
+                    Spacer(Modifier.width(10.dp))
+                    Text(job.name, modifier = Modifier.weight(1f), fontSize = 15.sp)
+                    TextButton(onClick = { editing = job }) { Text(s.edit, fontSize = 13.sp) }
                     TextButton(onClick = {
                         onSaveJobs(jobs.filter { it.number != job.number })
-                    }) { Text("Xóa") }
+                    }) { Text(s.delete, fontSize = 13.sp) }
                 }
             }
         }
-        Spacer(Modifier.height(8.dp))
-        Text("Xóa việc chỉ xóa tên việc, các số đã tích trước đó vẫn còn hiện trên lịch.", fontSize = 12.sp, color = Color.Gray)
+        Spacer(Modifier.height(6.dp))
+        Text(s.deleteNote, fontSize = 12.sp, color = Color.Gray)
     }
     if (adding || editing != null) {
         val initial = editing
         val nextNumber = (jobs.maxOfOrNull { it.number } ?: 0) + 1
         JobDialog(
+            s = s,
             initial = initial,
             defaultNumber = nextNumber,
             existingNumbers = jobs.map { it.number }.toSet(),
@@ -537,6 +583,7 @@ fun ProjectsScreen(
 
 @Composable
 fun JobDialog(
+    s: AppStrings,
     initial: Job?,
     defaultNumber: Int,
     existingNumbers: Set<Int>,
@@ -548,57 +595,57 @@ fun JobDialog(
     var colorIndex by remember { mutableStateOf(initial?.colorIndex ?: 0) }
     var error by remember { mutableStateOf("") }
     Dialog(onDismissRequest = onDismiss) {
-        Card(shape = RoundedCornerShape(28.dp), modifier = Modifier.fillMaxWidth().padding(8.dp)) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Text(if (initial != null) "Sửa việc" else "Thêm việc mới", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(14.dp))
+        Card(shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+            Column(modifier = Modifier.padding(18.dp)) {
+                Text(if (initial != null) s.jobDialogEdit else s.jobDialogAdd, fontSize = 19.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(12.dp))
                 TextField(
                     value = numberText, onValueChange = { numberText = it.filter { c -> c.isDigit() } },
-                    label = { Text("Số việc") },
+                    label = { Text(s.numberLabel) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(Modifier.height(10.dp))
                 TextField(
                     value = name, onValueChange = { name = it },
-                    label = { Text("Tên việc") },
+                    label = { Text(s.nameLabel) },
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(Modifier.height(14.dp))
-                Text("Chọn màu")
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(12.dp))
+                Text(s.colorLabel)
+                Spacer(Modifier.height(6.dp))
                 Row {
                     for (i in JOB_COLORS.indices) {
                         Box(
-                            modifier = Modifier.size(44.dp).padding(3.dp)
-                                .background(JOB_COLORS[i], RoundedCornerShape(22.dp))
+                            modifier = Modifier.size(40.dp).padding(3.dp)
+                                .background(JOB_COLORS[i], RoundedCornerShape(20.dp))
                                 .border(
                                     width = if (colorIndex == i) 3.dp else 0.dp,
                                     color = if (colorIndex == i) Color.Black else Color.Transparent,
-                                    shape = RoundedCornerShape(22.dp)
+                                    shape = RoundedCornerShape(20.dp)
                                 )
                                 .clickable { colorIndex = i }
                         )
                     }
                 }
                 if (error.isNotBlank()) {
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(6.dp))
                     Text(error, color = Color.Red)
                 }
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(12.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onDismiss) { Text("Hủy") }
+                    TextButton(onClick = onDismiss) { Text(s.cancel) }
                     Spacer(Modifier.width(8.dp))
                     Button(onClick = {
                         val n = numberText.toIntOrNull()
                         when {
-                            n == null || n <= 0 -> error = "Nhập số việc lớn hơn 0."
-                            name.isBlank() -> error = "Nhập tên việc."
-                            initial == null && existingNumbers.contains(n) -> error = "Số $n đã có rồi, chọn số khác."
-                            initial != null && initial.number != n && existingNumbers.contains(n) -> error = "Số $n đã có rồi, chọn số khác."
+                            n == null || n <= 0 -> error = s.errNumberPositive
+                            name.isBlank() -> error = s.errNameRequired
+                            initial == null && existingNumbers.contains(n) -> error = s.errNumberExists(n)
+                            initial != null && initial.number != n && existingNumbers.contains(n) -> error = s.errNumberExists(n)
                             else -> onSave(n, name.trim(), colorIndex)
                         }
-                    }) { Text("Lưu") }
+                    }) { Text(s.save) }
                 }
             }
         }
