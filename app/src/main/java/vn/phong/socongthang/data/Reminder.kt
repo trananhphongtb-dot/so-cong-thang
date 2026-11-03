@@ -91,10 +91,12 @@ class ReminderReceiver : BroadcastReceiver() {
             context, 0, openIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        val lang = try { Store(context).loadLang() ?: "vi" } catch (_: Exception) { "vi" }
+        val s = vn.phong.socongthang.ui.stringsFor(lang)
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("Chưa tích xong hôm nay")
-            .setContentText("Hôm nay có hẹn hoặc đã tích nhưng chưa bấm Đã xong. Bấm để mở app tích ngay.")
+            .setContentTitle(s.reminderTitle)
+            .setContentText(s.reminderText)
             .setContentIntent(pending)
             .setAutoCancel(true)
             .build()
