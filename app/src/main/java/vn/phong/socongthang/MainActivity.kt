@@ -10,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -19,6 +20,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import java.util.Calendar
 import vn.phong.socongthang.data.DayState
@@ -28,8 +31,10 @@ import vn.phong.socongthang.data.dateKey
 import vn.phong.socongthang.data.scheduleReminder
 import vn.phong.socongthang.ui.CalendarScreen
 import vn.phong.socongthang.ui.DayDialog
+import vn.phong.socongthang.ui.LanguageScreen
 import vn.phong.socongthang.ui.ProjectsScreen
 import vn.phong.socongthang.ui.StatsScreen
+import vn.phong.socongthang.ui.stringsFor
 
 class MainActivity : ComponentActivity() {
     private val permissionLauncher = registerForActivityResult(
@@ -52,7 +57,17 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             MaterialTheme {
-                var jobs by remember { mutableStateOf(store.loadJobs()) }
+                var lang by remember { mutableStateOf(store.loadLang()) }
+                if (lang == null) {
+                    LanguageScreen(onChoose = { chosen ->
+                        store.saveLang(chosen)
+                        lang = chosen
+                    })
+                    return@MaterialTheme
+                }
+                val currentLang = lang ?: "vi"
+                val s = stringsFor(currentLang)
+                var jobs by remember { mutableStateOf(store.loadJobs(currentLang)) }
                 var days by remember { mutableStateOf(store.loadDays()) }
                 var tab by remember { mutableStateOf(0) }
                 val now = Calendar.getInstance()
@@ -100,6 +115,7 @@ class MainActivity : ComponentActivity() {
                     Box(modifier = Modifier.weight(1f)) {
                         when (tab) {
                             0 -> CalendarScreen(
+                                s = s,
                                 jobs = jobs,
                                 days = days,
                                 year = viewYear,
@@ -110,6 +126,7 @@ class MainActivity : ComponentActivity() {
                                 onDayClick = { y, m, d -> openDay(y, m, d) }
                             )
                             1 -> StatsScreen(
+                                s = s,
                                 jobs = jobs,
                                 days = days,
                                 year = viewYear,
@@ -120,30 +137,36 @@ class MainActivity : ComponentActivity() {
                                 onDayClick = { y, m, d -> tab = 0; openDay(y, m, d) }
                             )
                             else -> ProjectsScreen(
+                                s = s,
+                                lang = currentLang,
+                                onLangChange = { chosen ->
+                                    store.saveLang(chosen)
+                                    lang = chosen
+                                },
                                 jobs = jobs,
                                 onBack = { tab = 0 },
                                 onSaveJobs = { saveJobs(it) }
                             )
                         }
                     }
-                    NavigationBar {
+                    NavigationBar(modifier = Modifier.height(58.dp)) {
                         NavigationBarItem(
                             selected = tab == 0,
                             onClick = { tab = 0 },
-                            icon = { Text("📅") },
-                            label = { Text("Lịch") }
+                            icon = { Text("📅", fontSize = 14.sp) },
+                            label = { Text(s.calendarTab, fontSize = 10.sp) }
                         )
                         NavigationBarItem(
                             selected = tab == 1,
                             onClick = { tab = 1 },
-                            icon = { Text("📊") },
-                            label = { Text("Thống kê") }
+                            icon = { Text("📊", fontSize = 14.sp) },
+                            label = { Text(s.statsTab, fontSize = 10.sp) }
                         )
                         NavigationBarItem(
                             selected = tab == 2,
                             onClick = { tab = 2 },
-                            icon = { Text("🗂️") },
-                            label = { Text("Dự án") }
+                            icon = { Text("🗂️", fontSize = 14.sp) },
+                            label = { Text(s.projectsTab, fontSize = 10.sp) }
                         )
                     }
                 }
@@ -154,6 +177,7 @@ class MainActivity : ComponentActivity() {
                     val key = dateKey(y, m, d)
                     val state = days[key] ?: DayState()
                     DayDialog(
+                        s = s,
                         year = y, month = m, day = d, jobs = jobs, state = state,
                         onToggleJob = { number ->
                             updateDay(key) { cur ->
