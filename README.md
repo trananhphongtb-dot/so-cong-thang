@@ -11,6 +11,6 @@ Cách dùng đúng theo thiết kế đã duyệt:
 - Dưới lịch là thống kê tháng: số ngày đã tích, tổng lượt việc, từng số được bao nhiêu ngày, và danh sách ngày chưa tích / chưa xong để tích bù.
 - Nhắc lúc 20h30 nếu ngày có hẹn hoặc đã tích mà chưa bấm Đã xong, khi máy đã cho phép thông báo.
 
-Bản 0.2.0: giao diện mới thoáng hơn, lịch là tab riêng, thống kê sang tab riêng, thẻ bo tròn lớn có bóng đổ kiểu 3D, nhắc 20h30 bằng AlarmManager (không dùng WorkManager nữa để nhẹ hơn), build debug có thu gọn R8 để giảm dung lượng.
+Bản 0.3.0: màn chính vừa đúng 1 màn hình (tiêu đề + ghi chú nhỏ căn giữa, lịch to chiếm phần còn lại, các thành phần khác thu nhỏ, biểu tượng tab nhỏ lại), thêm tiếng Anh: lần đầu mở app chọn Tiếng Việt / English, sau đó dùng luôn ngôn ngữ đã chọn (đổi lại trong tab Dự án), icon mới: ô vuông xanh lá, lịch trắng, dấu tích xanh và các chip số màu.
 Build: GitHub Actions, chỉ APK debug trước, chưa làm AAB.
-Gói: vn.phong.socongthang, version 0.2.0.
+Gói: vn.phong.socongthang, version 0.3.0.
