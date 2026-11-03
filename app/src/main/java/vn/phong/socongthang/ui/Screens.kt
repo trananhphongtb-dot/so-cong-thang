@@ -82,7 +82,7 @@ fun CalendarScreen(
     val monthPrefix = "%04d-%02d-".format(year, month + 1)
     val monthDays = days.filterKeys { it.startsWith(monthPrefix) }
     val tickedDays = monthDays.count { it.value.jobNumbers.isNotEmpty() }
-    val totalJobDays = monthDays.values.sumOf { it.value.jobNumbers.size }
+    val totalJobDays = monthDays.values.sumOf { it.jobNumbers.size }
     val unfinished = monthDays.filter { !it.value.done &&
         (it.value.scheduled || it.value.jobNumbers.isNotEmpty()) }
         .toList().sortedBy { it.first }
