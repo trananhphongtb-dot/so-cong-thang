@@ -36,5 +36,5 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.0")
-    implementation("androidx.work:workmanager-ktx:2.9.0")
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
 }
