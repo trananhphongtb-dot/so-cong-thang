@@ -20,13 +20,20 @@ class Store(context: Context) {
     private val prefs: SharedPreferences =
         context.getSharedPreferences("so_cong_thang", Context.MODE_PRIVATE)
 
-    fun loadJobs(): List<Job> {
+    fun loadLang(): String? = prefs.getString("lang", null)
+
+    fun saveLang(lang: String) {
+        prefs.edit().putString("lang", lang).apply()
+    }
+
+    fun loadJobs(lang: String = "vi"): List<Job> {
         val raw = prefs.getString("jobs", null)
         if (raw.isNullOrBlank()) {
+            val prefix = if (lang == "en") "Job" else "Việc"
             return listOf(
-                Job(1, "Việc 1", 0),
-                Job(2, "Việc 2", 1),
-                Job(3, "Việc 3", 2)
+                Job(1, "$prefix 1", 0),
+                Job(2, "$prefix 2", 1),
+                Job(3, "$prefix 3", 2)
             )
         }
         val out = mutableListOf<Job>()
@@ -39,7 +46,8 @@ class Store(context: Context) {
             out.add(Job(n, parts[1], color))
         }
         return out.sortedBy { it.number }.ifEmpty {
-            listOf(Job(1, "Việc 1", 0))
+            val prefix = if (lang == "en") "Job" else "Việc"
+            listOf(Job(1, "$prefix 1", 0))
         }
     }
 
